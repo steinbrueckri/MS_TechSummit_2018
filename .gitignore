@@ -1,0 +1,19 @@
+#Eclipse project files
+.classpath
+.project
+.settings
+
+# IntelliJ project files
+*.iml
+.idea/
+
+#binary directories
+bin
+target
+lib
+build
+.gradle/
+pom.xml.versionsBackup
+
+.DS_Store
+Presentation/Prometheus.key

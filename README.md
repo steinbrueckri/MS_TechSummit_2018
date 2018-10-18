@@ -10,9 +10,6 @@ http://localhost:9100
 # Alertmanager
 http://localhost:9093
 
-# Pushgateway
-http://localhost:9090
-
 # Blackbox
 http://localhost:9115
 

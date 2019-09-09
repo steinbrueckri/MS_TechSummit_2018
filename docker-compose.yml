@@ -10,7 +10,7 @@ networks:
 
 services:
   prometheus:
-    image: prom/prometheus:v2.1.0
+    image: prom/prometheus
     volumes:
       - ./config/prometheus/:/etc/prometheus/
       - prometheus_data:/prometheus
@@ -26,6 +26,15 @@ services:
       - alertmanager:alertmanager
     depends_on:
       - cadvisor
+    networks:
+      - back-tier
+    restart: always
+
+  pushgateway:
+    image: prom/pushgateway
+    container_name: pushgateway
+    ports:
+      - 9091:9091/tcp
     networks:
       - back-tier
     restart: always
@@ -116,11 +125,70 @@ services:
       - front-tier
     restart: always
 
-  MyService:
-    image: steinbrueckri/node-web-app:latest
+####
+# APPs
+####
+
+  nodejs-app:
+    build:
+      context: demo-apps/nodejs-app/
+      dockerfile: Dockerfile
+    depends_on:
+    - prometheus
     ports:
       - 3001:3001/tcp
     networks:
       - back-tier
       - front-tier
     restart: always
+
+  bash-batch-job:
+    build:
+      context: demo-apps/bash-batch-job/
+      dockerfile: Dockerfile
+    depends_on:
+    - pushgateway
+    networks:
+      - back-tier
+      - front-tier
+    restart: always
+
+####
+# Just Container for Testing Data
+####
+
+  trafficmaker-checkout:
+    image: devth/alpine-bench
+    depends_on:
+      - prometheus
+      - nodejs-app
+    networks:
+      - back-tier
+      - front-tier
+    restart: always
+    command:
+      '-n30 http://nodejs-app:3001/checkout'
+
+  trafficmaker-bad:
+    image: devth/alpine-bench
+    depends_on:
+      - prometheus
+      - nodejs-app
+    networks:
+      - back-tier
+      - front-tier
+    restart: always
+    command:
+      '-n30 http://nodejs-app:3001/bad'
+
+  trafficmaker-ok:
+    image: devth/alpine-bench
+    depends_on:
+      - prometheus
+      - nodejs-app
+    networks:
+      - back-tier
+      - front-tier
+    restart: always
+    command:
+      '-n30 http://nodejs-app:3001/ok'
